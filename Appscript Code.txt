@@ -1,0 +1,275 @@
+var sps = SpreadsheetApp.getActive()
+var sheet = sps.getSheets()[0]
+var lcol = sheet.getLastColumn();
+var lrow = sheet.getLastRow();
+
+var labelfor1 = sheet.getRange(1, lcol+1);
+var labelfor2 = sheet.getRange(1, lcol+2);
+var formulas1 = sheet.getRange(2, lcol+1,lrow-1,1);
+var formulas2 = sheet.getRange(2, lcol+2,lrow-1,1);
+var n;
+var value1;
+var value2;
+var box; //doesn't store the date when call another function
+
+var labels = ["Brand Name","Sub Brand Name","Platform", "Device", "Content Type", "Access Method", "OS Group","Actual Value 1","Actual Value 2","Actual Value 3"];
+var lookupRangeValues = sheet.getRange(1,1,1, lcol).getValues()[0]
+
+
+//The first step is to create a message box with the value that we need to evaluate
+
+
+function DCR() {
+  //find a way to use lower case
+  var message = "Type the checklist number you want to select",
+      message2 = "(For Example: 116)",
+      title = "Type the check";
+  
+  n = Browser.inputBox(title, message  + "\\n"+ message2, Browser.Buttons.OK_CANCEL);
+  var k = parseInt(n);
+  if(!isNaN(k)){n=k};
+  
+  sheet.activate() ; 
+  
+  switch(n)
+  {
+      // We insert the cases to work with procedure 1 
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+    case 17:
+    case 18:
+    case 19:
+    case 20:
+    case 21:
+    case 22:
+      value1= '=IF(OR(ISNUMBER(AA2)=FALSE,ISNUMBER(AE2)=FALSE),"Report",IF(AE2>=AA2,"Release","Report"))'
+      procedure()
+      break;
+    case 38:
+      value1= '=IF(ISNUMBER(AA3),IF(AA3<1000,"Report","Release"),"Report")'
+      procedure()
+      break;
+    case 64:
+      var message = 'Select the Frequency (1,2,3 or 4)',
+          message2 = '\\n 1)Daily    2)Weekly    3)Monthly    4)QTD',
+          title = "Frequency check";
+      var box = Browser.inputBox(title,message  + "\\n"+ message2, Browser.Buttons.OK_CANCEL);
+      procedure()
+      break;
+    case 115:
+    case 116:
+      value1= '=IF(OR(ISNUMBER(RC[-19])=FALSE,ISNUMBER(RC[-15])=FALSE),""Report"",IF(RC[-15]>=RC[-19],""Release"",""Report""))';
+      procedure()
+      break;
+      // We insert the cases to work with procedure 2    
+      
+    case 78:
+    case 79:
+      value1= '=IF(OR(ISNUMBER(AE2)=FALSE,ISNUMBER(AA2)=FALSE),"No Data",ABS(1-(AE2/AA2)))'
+      value2= '=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=20%,"Release","Report"))'
+      procedure()
+      break;
+    case 90:
+    case 91:
+      value1='=IF(OR(ISNUMBER(AI2)=FALSE,ISNUMBER(AA2)=FALSE),"No Data",ABS((AI2-AA2)/AA2))'
+      value2='=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=1000%,"Release","Report"))'
+      procedure()
+      break;
+    case 121:
+    case 122:
+      value1='=IF(OR(ISNUMBER(AA2)=FALSE,ISNUMBER(AE2)=FALSE),"No Data",ABS(AE2/AA2))'
+      value2='=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=2,"Release","Report"))'
+      
+      procedure()
+      break;
+      
+    case 'list':
+      Browser.msgBox('sdsds')
+      break;
+      
+    default:
+      Browser.msgBox('Check not available, please try again')
+      break;
+  }
+}
+
+function procedure()
+{
+  
+  hide_Columns();
+  show_Columns();
+  labeling();
+  applyformulas();
+  format();
+  color();
+  Browser.msgBox('Done');
+}
+
+function applyformulas()
+{
+  formulas1.setFormula(value1)
+  switch (n)
+  {
+    case 78:
+    case 79:
+    case 90:
+    case 91:
+    case 121:
+    case 122:
+      formulas2.setFormula(value2)
+      labelfor1.setValue("Formula")
+      labelfor2.setValue("Condition")
+      break;
+    default:
+      
+      labelfor1.setValue("Condition")
+      break;
+  }
+  
+}
+
+function hide_Columns()
+{
+  sheet.insertColumnsAfter(lcol,2)
+  sheet.hideColumns(1, lcol)
+}
+
+function show_Columns()
+{
+  
+  for(var i =0 ; i<labels.length; i++)
+  {
+    var label = labels[i];
+    
+    var index = lookupRangeValues.indexOf(label)+1;
+    
+    sheet.showColumns(index) 
+    
+  }  
+  
+}
+
+function labeling()
+{
+  var  labelBrandName = lookupRangeValues.indexOf(labels[0])+1;
+  Logger.log(labelBrandName)
+  
+  var  labelval1 = sheet.getRange(1, lookupRangeValues.indexOf(labels[7])+1);
+  var  labelval2 = sheet.getRange(1, lookupRangeValues.indexOf(labels[8])+1);
+  var  labelval3 = sheet.getRange(1, lookupRangeValues.indexOf(labels[9])+1);
+  
+  switch (n){
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+    case 17:
+    case 18:
+    case 19:
+    case 20:
+    case 21:
+    case 22:
+      labelval1.setValue('Current Day SC Imprs (AV1)')
+      labelval2.setValue('Previous Day SC Imprs (AV2)')
+      break;
+    case 38:
+      labelval1.setValue('SC Imprs (AV1)')
+      break;
+    case 64:
+      
+      switch(box)
+      {
+        case 1:
+          
+          labelval1.setValue('SC Imprs (AV1)') 
+          break;
+        case 2:
+        case 3:
+        case 4:
+          labelval1.setValue('Estimated Impressions (AV1)')
+          break;
+      }
+      labelval2.setValue('Estimated Audience UA (AV2)')
+      labelval3.setValue('Estimated Frequency (AV3)')
+      break;
+    case 115:
+    case 116:
+      labelval1.setValue('FB App launches (AV1)')
+      labelval2.setValue('FB App UA (AV2)')  
+      break;
+    case 78:
+    case 79:
+      labelval1.setValue('Census Impr (AV1)')
+      labelval2.setValue('FB Impr (AV2)')  
+      break;
+    case 90:
+    case 91:
+      labelval1.setValue('Census (AV1)')
+      labelval2.setValue('Deviation (AV2)')
+      labelval3.setValue('Mean (AV3)')
+      
+      break;
+    case 121:
+    case 122:
+      labelval1.setValue('Raw Frequency (AV1)')
+      labelval2.setValue('Estimated Frequency (AV2)')
+      break;
+      
+  }
+  
+  sheet.setFrozenColumns(labelBrandName) 
+}
+
+function format()
+{
+  var lcol = sheet.getLastColumn();
+  var lrow = sheet.getLastRow();
+  
+  sheet.getRange(1, 1, lrow, lcol).setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
+}
+
+
+function color()
+{
+  var sps = SpreadsheetApp.getActive();
+  var sheet = sps.getActiveSheet();
+  var lcol = sheet.getLastColumn();
+  var lrow = sheet.getLastRow();
+
+ Logger.log
+  
+  var results = ['Release','Report'];
+  var range = sheet.getRange(2, lcol,lrow-1,1);
+  
+  for(var i =0 ; i<results.length; i++)
+  {
+    var rules = sheet.getConditionalFormatRules()
+    var result = results[i];
+    
+    switch(result)
+    {
+      case 'Release':
+        var color = '#B7E1CD';
+        break;
+      case 'Report':
+        var color = '#F4C7C3';
+        break;
+        
+    } 
+    rules.push(SpreadsheetApp.newConditionalFormatRule()
+               .setRanges([range])
+               .whenTextContains(result)
+               .setBackground(color)
+               .build());        
+    
+    sheet.setConditionalFormatRules(rules)
+    
+    Logger.log(rules)
+  }
+  
+  sheet.getRange(2, lcol,lrow-1,1).activate();
+  
+}
+
