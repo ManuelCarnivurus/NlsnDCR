@@ -10,7 +10,6 @@ var formulas2 = sheet.getRange(2, lcol+2,lrow-1,1);
 var n;
 var value1;
 var value2;
-var box; //doesn't store the date when call another function
 
 var labels = ["Brand Name","Sub Brand Name","Platform", "Device", "Content Type", "Access Method", "OS Group","Actual Value 1","Actual Value 2","Actual Value 3"];
 var lookupRangeValues = sheet.getRange(1,1,1, lcol).getValues()[0]
@@ -48,19 +47,17 @@ function DCR() {
       procedure()
       break;
     case 38:
-      value1= '=IF(ISNUMBER(AA3),IF(AA3<1000,"Report","Release"),"Report")'
+      value1= '=IF(ISNUMBER(AA2),IF(AA2<1000,"Report","Release"),"Report")'
       procedure()
       break;
     case 64:
-      var message = 'Select the Frequency (1,2,3 or 4)',
-          message2 = '\\n 1)Daily    2)Weekly    3)Monthly    4)QTD',
-          title = "Frequency check";
-      var box = Browser.inputBox(title,message  + "\\n"+ message2, Browser.Buttons.OK_CANCEL);
+      
+      
       procedure()
       break;
     case 115:
     case 116:
-      value1= '=IF(OR(ISNUMBER(RC[-19])=FALSE,ISNUMBER(RC[-15])=FALSE),""Report"",IF(RC[-15]>=RC[-19],""Release"",""Report""))';
+      value1= '=IF(OR(ISNUMBER(AA2)=FALSE,ISNUMBER(AE2)=FALSE),"Report",IF(AE2>=AA2,"Release","Report"))';
       procedure()
       break;
       // We insert the cases to work with procedure 2    
@@ -104,31 +101,10 @@ function procedure()
   applyformulas();
   format();
   color();
+  sort();
   Browser.msgBox('Done');
 }
 
-function applyformulas()
-{
-  formulas1.setFormula(value1)
-  switch (n)
-  {
-    case 78:
-    case 79:
-    case 90:
-    case 91:
-    case 121:
-    case 122:
-      formulas2.setFormula(value2)
-      labelfor1.setValue("Formula")
-      labelfor2.setValue("Condition")
-      break;
-    default:
-      
-      labelfor1.setValue("Condition")
-      break;
-  }
-  
-}
 
 function hide_Columns()
 {
@@ -154,7 +130,6 @@ function show_Columns()
 function labeling()
 {
   var  labelBrandName = lookupRangeValues.indexOf(labels[0])+1;
-  Logger.log(labelBrandName)
   
   var  labelval1 = sheet.getRange(1, lookupRangeValues.indexOf(labels[7])+1);
   var  labelval2 = sheet.getRange(1, lookupRangeValues.indexOf(labels[8])+1);
@@ -178,49 +153,82 @@ function labeling()
       labelval1.setValue('SC Imprs (AV1)')
       break;
     case 64:
+      var message = 'Select the Frequency (1,2,3 or 4)',
+          message2 = '\\n 1)Daily    2)Weekly    3)Monthly    4)QTD',
+          title = "Frequency check";
+      var box = Browser.inputBox(title,message  + "\\n"+ message2, Browser.Buttons.OK_CANCEL);
+      var boxNum = parseInt(box);
+      var box = boxNum
       
+      Logger.log(box)
       switch(box)
       {
         case 1:
-          
-          labelval1.setValue('SC Imprs (AV1)') 
+          labelval1.setValue('SC Imprs (AV1)') ;
+          value1 = '=IF(OR(ISNUMBER(AI2)=FALSE,ISNUMBER(AE2)=FALSE),"Report",IF(AND(AI2>100,AE2<10),"Release","Report"))'
           break;
         case 2:
         case 3:
         case 4:
-          labelval1.setValue('Estimated Impressions (AV1)')
+          labelval1.setValue('Estimated Impressions (AV1)');
+          value1 = '=IF(OR(ISNUMBER(AI2)=FALSE,ISNUMBER(AE2)=FALSE,ISNUMBER(AA2)=FALSE),"Report",IF(AND(AI2>100,AE2>10,AA2>1000),"Release", "Report"))'
           break;
       }
-      labelval2.setValue('Estimated Audience UA (AV2)')
-      labelval3.setValue('Estimated Frequency (AV3)')
+      labelval2.setValue('Estimated Audience UA (AV2)');
+      labelval3.setValue('Estimated Frequency (AV3)');
       break;
+      
     case 115:
     case 116:
-      labelval1.setValue('FB App launches (AV1)')
-      labelval2.setValue('FB App UA (AV2)')  
+      labelval1.setValue('FB App launches (AV1)');
+      labelval2.setValue('FB App UA (AV2)')  ;
       break;
     case 78:
     case 79:
-      labelval1.setValue('Census Impr (AV1)')
-      labelval2.setValue('FB Impr (AV2)')  
+      labelval1.setValue('Census Impr (AV1)');
+      labelval2.setValue('FB Impr (AV2)')  ;
       break;
     case 90:
     case 91:
-      labelval1.setValue('Census (AV1)')
-      labelval2.setValue('Deviation (AV2)')
-      labelval3.setValue('Mean (AV3)')
+      labelval1.setValue('Census (AV1)');
+      labelval2.setValue('Deviation (AV2)');
+      labelval3.setValue('Mean (AV3)');
       
       break;
     case 121:
     case 122:
-      labelval1.setValue('Raw Frequency (AV1)')
-      labelval2.setValue('Estimated Frequency (AV2)')
+      labelval1.setValue('Raw Frequency (AV1)');
+      labelval2.setValue('Estimated Frequency (AV2)');
       break;
       
   }
   
   sheet.setFrozenColumns(labelBrandName) 
 }
+
+function applyformulas()
+{
+  formulas1.setFormula(value1)
+  switch (n)
+  {
+    case 78:
+    case 79:
+    case 90:
+    case 91:
+    case 121:
+    case 122:
+      formulas2.setFormula(value2)
+      labelfor1.setValue("Formula")
+      labelfor2.setValue("Condition")
+      break;
+    default:
+      
+      labelfor1.setValue("Condition")
+      break;
+  }
+  
+}
+
 
 function format()
 {
@@ -237,8 +245,7 @@ function color()
   var sheet = sps.getActiveSheet();
   var lcol = sheet.getLastColumn();
   var lrow = sheet.getLastRow();
-
- Logger.log
+  
   
   var results = ['Release','Report'];
   var range = sheet.getRange(2, lcol,lrow-1,1);
@@ -266,10 +273,20 @@ function color()
     
     sheet.setConditionalFormatRules(rules)
     
-    Logger.log(rules)
   }
-  
-  sheet.getRange(2, lcol,lrow-1,1).activate();
   
 }
 
+
+function sort() 
+{
+  
+  var sps = SpreadsheetApp.getActive();
+  var sheet = sps.getActiveSheet();
+  var lcol = sheet.getLastColumn();
+  var lrow = sheet.getLastRow();
+  var range = sheet.getRange(2, 1,lrow-1,lcol).activate()
+  
+  range.sort({column:lcol,ascending:false})
+  
+}
