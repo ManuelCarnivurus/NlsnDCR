@@ -1,30 +1,71 @@
-var sps = SpreadsheetApp.getActive()
-var sheet = sps.getSheets()[0]
+function onOpen()
+{
+var sps = SpreadsheetApp.getActiveSpreadsheet();
+
+var menuEntries = [
+{name: 'Checks', functionName: 'DCR'},
+{name: 'Clean', functionName: 'clean'}];
+
+sps.addMenu('Functions', menuEntries)
+
+}
+
+function clean(){
+  
+  var sps = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = sps.getActiveSheet();
+  var lrow = sheet.getMaxRows();
+  var lcol = sheet.getMaxColumns();
+  
+  Logger.log(lrow);
+  Logger.log(lcol);
+  
+  sheet.setFrozenColumns(0);
+  sheet.showColumns(1,lcol);
+  sheet.clearConditionalFormatRules()
+  sheet.clearContents()
+  sheet.clearFormats()
+  
+}
+
+
+_______________________________________________________________________________________________
+
+
+//Global Variables
+var sps = SpreadsheetApp.getActive();
+var sheet = sps.getActiveSheet();
+var sheet3 = sps.getSheetByName('Macro')
 var lcol = sheet.getLastColumn();
 var lrow = sheet.getLastRow();
+var value1, value2; //Variables used in more than one function with different values
 
-var labelfor1 = sheet.getRange(1, lcol+1);
-var labelfor2 = sheet.getRange(1, lcol+2);
-var formulas1 = sheet.getRange(2, lcol+1,lrow-1,1);
-var formulas2 = sheet.getRange(2, lcol+2,lrow-1,1);
-var n;
-var value1;
-var value2;
+function DCR()
+{
+  // This function will be the main matrixm, where all function will be applied
+  
+  var n = checkBox(); //Will create the main value n provided by the user
+  hide_Columns(); //Will hide all columns (with data) on the sheet
+  show_Columns(); //Will show just the relevant columns for the user
+  labeling(n);  //Will add names to the headers and Value1,2 and 3
+  applyformulas(n); //Will set the formulas in google sheet format that were provided by DCR IT
+  format(); //Adds borders to the active range
+  color(); // Will add conditionals by color (Report = red, Release = Green)
+  sort(); //(Sorting the report rows first)
+  Browser.msgBox('Done'); //Final successful message 
+  
+}
 
-var labels = ["Brand Name","Sub Brand Name","Platform", "Device", "Content Type", "Access Method", "OS Group","Actual Value 1","Actual Value 2","Actual Value 3"];
-var lookupRangeValues = sheet.getRange(1,1,1, lcol).getValues()[0]
-
-
-//The first step is to create a message box with the value that we need to evaluate
-
-
-function DCR() {
-  //find a way to use lower case
+function checkBox()
+{
+  //The first step is to create a message box with the value that we need to evaluate
+  
   var message = "Type the checklist number you want to select",
       message2 = "(For Example: 116)",
       title = "Type the check";
   
-  n = Browser.inputBox(title, message  + "\\n"+ message2, Browser.Buttons.OK_CANCEL);
+  var n = Browser.inputBox(title, message  + "\\n"+ message2, Browser.Buttons.OK_CANCEL);
+  
   var k = parseInt(n);
   if(!isNaN(k)){n=k};
   
@@ -32,7 +73,7 @@ function DCR() {
   
   switch(n)
   {
-      // We insert the cases to work with procedure 1 
+      // We insert the formulas depending the result of n
     case 13:
     case 14:
     case 15:
@@ -43,97 +84,80 @@ function DCR() {
     case 20:
     case 21:
     case 22:
-      value1= '=IF(OR(ISNUMBER(AA2)=FALSE,ISNUMBER(AE2)=FALSE),"Report",IF(AE2>=AA2,"Release","Report"))'
-      procedure()
+      value1= '=IF(OR(ISNUMBER(AA2)=FALSE,ISNUMBER(AE2)=FALSE),"Report",IF(AE2>=AA2,"Release","Report"))';
       break;
     case 38:
-      value1= '=IF(ISNUMBER(AA2),IF(AA2<1000,"Report","Release"),"Report")'
-      procedure()
+      value1= '=IF(ISNUMBER(AA2),IF(AA2<1000,"Report","Release"),"Report")';
       break;
     case 64:
-      
-      
-      procedure()
+      //We wont include the formula cause we need another break (store in procedure)
       break;
     case 115:
     case 116:
       value1= '=IF(OR(ISNUMBER(AA2)=FALSE,ISNUMBER(AE2)=FALSE),"Report",IF(AE2>=AA2,"Release","Report"))';
-      procedure()
       break;
-      // We insert the cases to work with procedure 2    
-      
     case 78:
     case 79:
-      value1= '=IF(OR(ISNUMBER(AE2)=FALSE,ISNUMBER(AA2)=FALSE),"No Data",ABS(1-(AE2/AA2)))'
-      value2= '=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=20%,"Release","Report"))'
-      procedure()
+      value1= '=IF(OR(ISNUMBER(AE2)=FALSE,ISNUMBER(AA2)=FALSE),"No Data",ABS(1-(AE2/AA2)))';
+      value2= '=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=20%,"Release","Report"))';
       break;
     case 90:
     case 91:
-      value1='=IF(OR(ISNUMBER(AI2)=FALSE,ISNUMBER(AA2)=FALSE),"No Data",ABS((AI2-AA2)/AA2))'
-      value2='=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=1000%,"Release","Report"))'
-      procedure()
+      value1='=IF(OR(ISNUMBER(AI2)=FALSE,ISNUMBER(AA2)=FALSE),"No Data",ABS((AI2-AA2)/AA2))';
+      value2='=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=1000%,"Release","Report"))';
       break;
     case 121:
     case 122:
-      value1='=IF(OR(ISNUMBER(AA2)=FALSE,ISNUMBER(AE2)=FALSE),"No Data",ABS(AE2/AA2))'
-      value2='=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=2,"Release","Report"))'
-      
-      procedure()
-      break;
-      
-    case 'list':
-      Browser.msgBox('sdsds')
+      value1='=IF(OR(ISNUMBER(AA2)=FALSE,ISNUMBER(AE2)=FALSE),"No Data",ABS(AE2/AA2))';
+      value2='=IF(OR(ISNUMBER(AT2)=FALSE),"Report",IF(AT2<=2,"Release","Report"))';
       break;
       
     default:
-      Browser.msgBox('Check not available, please try again')
+      Browser.msgBox('Check not available, please try again'); //Other number different for the specified in the list will result as the end of the macro
       break;
   }
+  
+  return n
+  
 }
 
-function procedure()
-{
-  
-  hide_Columns();
-  show_Columns();
-  labeling();
-  applyformulas();
-  format();
-  color();
-  sort();
-  Browser.msgBox('Done');
-}
 
 
 function hide_Columns()
 {
+  //Using the global variable lcol we identify and select all columns with data
   sheet.insertColumnsAfter(lcol,2)
   sheet.hideColumns(1, lcol)
 }
 
 function show_Columns()
 {
+  var labels = ["Brand Name","Sub Brand Name","Platform", "Device", "Content Type", "Access Method", "OS Group","Actual Value 1","Actual Value 2","Actual Value 3"];
+  var lookupRangeValues = sheet.getRange(1,1,1, lcol).getValues()[0]
   
+  //Using a loop will index the values to show the relevant columns  
   for(var i =0 ; i<labels.length; i++)
   {
-    var label = labels[i];
-    
+    var label = labels[i];  
     var index = lookupRangeValues.indexOf(label)+1;
     
     sheet.showColumns(index) 
     
   }  
-  
 }
 
-function labeling()
+function labeling(n)
 {
+  
+  var labels = ["Brand Name","Sub Brand Name","Platform", "Device", "Content Type", "Access Method", "OS Group","Actual Value 1","Actual Value 2","Actual Value 3"];
+  var lookupRangeValues = sheet.getRange(1,1,1, lcol).getValues()[0]
+  
+  //We will index the values to rename the headers Actual Value 1, 2 and 3 depending of the check
   var  labelBrandName = lookupRangeValues.indexOf(labels[0])+1;
   
-  var  labelval1 = sheet.getRange(1, lookupRangeValues.indexOf(labels[7])+1);
-  var  labelval2 = sheet.getRange(1, lookupRangeValues.indexOf(labels[8])+1);
-  var  labelval3 = sheet.getRange(1, lookupRangeValues.indexOf(labels[9])+1);
+  var  labelval1 = sheet.getRange(1, lookupRangeValues.indexOf(labels[7])+1); //range of header 'Actual Value 1'
+  var  labelval2 = sheet.getRange(1, lookupRangeValues.indexOf(labels[8])+1); //range of header 'Actual Value 2'
+  var  labelval3 = sheet.getRange(1, lookupRangeValues.indexOf(labels[9])+1); //range of header 'Actual Value 3'
   
   switch (n){
     case 13:
@@ -164,7 +188,7 @@ function labeling()
       switch(box)
       {
         case 1:
-          labelval1.setValue('SC Imprs (AV1)') ;
+          labelval1.setValue('SC Imprs (AV1)') ; //After this break is necessary to set the formula that was not provided in Checkbox
           value1 = '=IF(OR(ISNUMBER(AI2)=FALSE,ISNUMBER(AE2)=FALSE),"Report",IF(AND(AI2>100,AE2<10),"Release","Report"))'
           break;
         case 2:
@@ -202,19 +226,28 @@ function labeling()
       break;
       
   }
-  
+  //We froze the column for a better visualization
   sheet.setFrozenColumns(labelBrandName) 
 }
 
-function applyformulas()
+function applyformulas(n)
 {
-  formulas1.setFormula(value1)
+  
+  var formulas1 = sheet.getRange(2, lcol+1,lrow-1,1);
+  var formulas2 = sheet.getRange(2, lcol+2,lrow-1,1);
+  var labelfor1 = sheet.getRange(1, lcol+1);
+  var labelfor2 = sheet.getRange(1, lcol+2);
+  
+  
+  formulas1.setFormula(value1); //All checks have a value1 that will be applied however some checks like 78 and 79 have 2 values, 
+  //The second value will be defined by the next switch
   switch (n)
   {
     case 78:
     case 79:
     case 90:
     case 91:
+      formulas1.setNumberFormat('0.00%');
     case 121:
     case 122:
       formulas2.setFormula(value2)
@@ -222,33 +255,31 @@ function applyformulas()
       labelfor2.setValue("Condition")
       break;
     default:
-      
       labelfor1.setValue("Condition")
       break;
   }
   
 }
 
-
 function format()
 {
+  
   var lcol = sheet.getLastColumn();
-  var lrow = sheet.getLastRow();
+  var lrow = sheet.getLastRow(); //Because we add one or two columns (depending of the check) it is we need to recall lcol and lrow
   
   sheet.getRange(1, 1, lrow, lcol).setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
+  sheet.getRange(1, 1, lrow, lcol).setHorizontalAlignment('center')
 }
 
 
 function color()
 {
-  var sps = SpreadsheetApp.getActive();
-  var sheet = sps.getActiveSheet();
+  
   var lcol = sheet.getLastColumn();
-  var lrow = sheet.getLastRow();
+  var lrow = sheet.getLastRow(); //Because we add one or two columns (depending of the check) it is we need to recall lcol and lrow
   
-  
-  var results = ['Release','Report'];
-  var range = sheet.getRange(2, lcol,lrow-1,1);
+  var results = ['Release','Report']; // we create an array to be used in a loop
+  var range = sheet.getRange(2, lcol,lrow-1,1); //Getting the range where the formulas were applied
   
   for(var i =0 ; i<results.length; i++)
   {
@@ -281,12 +312,16 @@ function color()
 function sort() 
 {
   
-  var sps = SpreadsheetApp.getActive();
-  var sheet = sps.getActiveSheet();
-  var lcol = sheet.getLastColumn();
-  var lrow = sheet.getLastRow();
-  var range = sheet.getRange(2, 1,lrow-1,lcol).activate()
+  //Sorting Reports first
   
-  range.sort({column:lcol,ascending:false})
+  
+  var lcol = sheet.getLastColumn();
+  var lrow = sheet.getLastRow(); //Because we add one or two columns (depending of the check) it is we need to recall lcol and lrow
+  var range = sheet.getRange(2, 1,lrow-1,lcol).activate();
+  
+  range.sort({column:lcol,ascending:false});
+  
+  sheet.getRange(2,lcol).activate();
   
 }
+
